@@ -1,7 +1,7 @@
 
 const {appComponent} = require("./../../ComponenManager/componentmanager")
 
-let myapp = new appComponent("terminal","terminal.png")
+let myapp = new appComponent("your app Name","paint.png")
 
 myapp.click = function () { 
     
