@@ -19,7 +19,7 @@ class appComponent{
     viewScreen(){
         let that = this;
         
-        let content = '<iframe src="./src/apps/'+this.title+'/page/index.html" frameborder="0" allowfullscreen" style="width:100%;height:100%;"></iframe>'
+        let content = '<iframe id="iframe'+this.title+'" src="./src/apps/'+this.title+'/page/index.html" frameborder="0" allowfullscreen" style="width:100%;height:100%;"></iframe>'
         if(this.isOpened == false){
             $(".view").append(" <div class='panel' id='panel"+this.title+"' > <div class='panelBar'> <button id='panelBar1"+this.title+"' class='panelBar1'>  </button> <button id='panelBar2"+this.title+"' class='panelBar2'>  </button> </div>  <div class='panelView'> "+content+" </div>  </div> ");
             this.isOpened = true;

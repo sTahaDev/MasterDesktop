@@ -2,6 +2,8 @@
 
 function app(){
     let lineNumber = 1;
+    let currentPage = ""
+    let currentAppName = ""
 
     function addNewLine(number) { 
         let lines = $('.main');
@@ -12,9 +14,26 @@ function app(){
         
         
     }
+    //Bunu Sadece Seri Line Ekleme için kullanıyorum
+    function createNewLine(string,number){
+        let lines = $('.main');
+        let content = '<div class="newLine"> <p class="lineNumber"> '+number+' </p> <input id="input'+number+'" type="text" class="line"> </div>'
+        lines.append(content);
+        $("#input"+number).val(string);
+    }
 
-    function process(allFile){
+    function upload(currentAppName,currentPage,allFile){
         console.log(allFile);
+        window.parent.postMessage({"type":"upload","fileName":currentPage,"fileString":allFile,"appName":currentAppName})
+    }
+
+    function addNewStringToPage(pageString){
+        let stringArray = pageString.split("\n")
+        for (let index = 0; index < stringArray.length; index++) {
+            createNewLine(stringArray[index],lineNumber)
+            lineNumber += 1;
+            
+        }
     }
     
     $(document).ready(function () {
@@ -62,7 +81,7 @@ function app(){
     
         $('.main').keydown(function (e) {
     
-            var key = e.which || e.key
+            var key = e.which 
             
             
             //Up Key
@@ -72,6 +91,7 @@ function app(){
                     if ($(this).is(":focus")){
                      
                         if(index > 0){
+                            
                             $("input").eq(index - 1).focus();
                              
                         } 
@@ -81,16 +101,17 @@ function app(){
             }
             //Down Key
             if (key == 40){
+                let deneme = false;
                 $("input").each(function (index, element) {
-                    
+                   
                     if ($(this).is(":focus")){
-                     
-                        if(index > 0){
+                        
+                        if(!deneme){
                             $("input").eq(index + 1).focus();
-                             
-                        } 
+                            deneme = !deneme
+                        }
                          
-                     }
+                    }
                  });
             }
             // Backspace
@@ -121,19 +142,13 @@ function app(){
         }); 
         
     
-        $(".main").mousedown(function (event) { 
-            if (event.which == 1){
-                //Çalışmıyor şuanda
-                $("#input"+(lineNumber-1)).focus();
-            }   
-            
-        });
+
         
     });
 
 
     //Upload Button Click
-    $(".processBtn").click(function (e) { 
+    $(".uploadBtn").click(function (e) { 
         let allFile = "";
         $("input").each(function (index, element) {
             let text = $(element).val() + "\n";
@@ -141,16 +156,63 @@ function app(){
             allFile += text;
             
         });
-        process(allFile)
+        
+        upload(currentAppName,currentPage,allFile)
     });
 
     //Open File Button Click
     $(".openFileBtn").click(function (e) { 
-        $("body").html("");
+        
         $("body").append("<div class='openFileNew' > <div class='openFileNewAlt' > <h3>File Name</h3> <input id='inputOpenFile' /> <button id='btnOpenFile' > Open </button> </div> </div>");
         $("#btnOpenFile").click(function (e) { 
             
-            window.parent.postMessage({"type":"openFile","appName":$("input").val()})
+            window.parent.postMessage({"type":"openFile","appName":$("#inputOpenFile").val()})
+            currentAppName = $("#inputOpenFile").val();
+        });
+        window.addEventListener("message",function(event) {
+            let value = event.data;
+
+            if(value.type == "closeNewFilePage"){
+                $(".files").html("");
+                $(".files").append('<div id="file-text-indexjs" class="file-text"><p>index.js</p></div>');
+                $(".files").append('<div id="file-text-indexhtml" class="file-text"><p>index.html</p></div>');
+                $(".files").append('<div id="file-text-appjs" class="file-text"><p>app.js</p></div>');
+                $(".files").append('<div id="file-text-stylecss" class="file-text"><p>style.css</p></div>');
+
+                $(".openFileNew").remove();
+
+                $("#file-text-indexjs").click(function (e) { 
+                    $(".main").html("");
+                    lineNumber = 1;
+                    addNewStringToPage(value.indexjs)
+                    currentPage = "indexjs"
+                    
+                });
+                $("#file-text-indexhtml").click(function (e) { 
+                    $(".main").html("");
+                    lineNumber = 1;
+                    addNewStringToPage(value.indexhtml)
+                    currentPage = "indexhtml"
+                    
+                });
+                $("#file-text-appjs").click(function (e) { 
+                    $(".main").html("");
+                    lineNumber = 1;
+                    addNewStringToPage(value.appjs)
+                    currentPage = "appjs"
+                    
+                });
+                $("#file-text-stylecss").click(function (e) { 
+                    $(".main").html("");
+                    lineNumber = 1;
+                    addNewStringToPage(value.stylecss)
+                    currentPage = "stylecss"
+                    
+                });
+            }
+
+
+        
         });
     });
     

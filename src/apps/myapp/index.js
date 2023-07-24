@@ -1,6 +1,6 @@
 const {appComponent} = require("./../../ComponenManager/componentmanager") 
  
- let myapp = new appComponent("paint2","paint.png") 
+ let myapp = new appComponent("myapp","paint.png") 
  
  myapp.click = function () { 
  myapp.viewScreen(); 
