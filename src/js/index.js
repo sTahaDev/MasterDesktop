@@ -186,6 +186,12 @@ window.addEventListener("message",async function(event) {
             });
         }
     }
+
+    else if(receivedValue instanceof Object && receivedValue.type == "deleteApp"){
+        
+    });
+
+
     
 });
 

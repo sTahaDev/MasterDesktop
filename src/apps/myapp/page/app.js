@@ -1,1 +1,6 @@
-$("#btn").click(function (e){ alert("hello world") })
+$("#btn").click(function (e){ alert("taha adamdır") })
+
+
+
+
+
