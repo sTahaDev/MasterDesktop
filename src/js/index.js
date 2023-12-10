@@ -220,7 +220,7 @@ window.addEventListener("message", async function (event) {
         refreshPage(false)
 
         if (value.fileName == "indexjs") {
-            fs.writeFile("./src/apps/" + value.appName + "indexjs", value.fileString, (err) => {
+            fs.writeFile("./src/apps/" + value.appName + "/index.js", value.fileString, (err) => {
                 if (err) {
                     console.error('Dosyaya yazma hatası:', err);
                 } else {
