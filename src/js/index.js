@@ -3,260 +3,311 @@ window.$ = window.jQuery = require('./src/js/jquery.min.js');
 const fs = require("fs")
 const pathLib = require('path');
 const fse = require('fs-extra');
-let AppUrls = require("./MasterDesktop.json")
+
+const { log } = require("console");
 
 let apps = []
 
 
-let createApp = (name,path_name)=>{
-    let app = '<div id="'+name+'" class="app">  <img src="./src/images/'+path_name+'" alt=""> </div>'
+let createApp = (name, path_name) => {
+    let app = '<div id="' + name + '" class="app">  <img src="./src/images/' + path_name + '" alt=""> </div>'
+
     $(".appBar").append(app);
-    $("#"+name).hover(function () {
-            $(this).append('<p id="appName'+name+'" class="appName">'+name+'</p>');
-            
-        }, function () {
-            $('#appName'+name).remove();
-        }
+    $("#" + name).hover(function () {
+        $(this).append('<p id="appName' + name + '" class="appName">' + name + '</p>');
+
+    }, function () {
+        $('#appName' + name).remove();
+    }
     );
+
+}
+let createApps = () => {
+    $(".appBar").html("");
     
+    fs.readFile("./MasterDesktop.json", 'utf8', (err, data) => {
+        let AppUrls = JSON.parse(data)
+
+        for (let index = 0; index < AppUrls.length; index++) {
+        
+            let { myapp } = require(AppUrls[index].url);
+            console.log(myapp);
+            apps.push(myapp.title)
+    
+            createApp(myapp.title, myapp.path)
+    
+            $("#" + myapp.title).click(function (e) {
+    
+                myapp.click()
+    
+    
+            });
+    
+            
+    
+        }
+    });
+    
+   
+    
+}
+
+function deleteDir(klasorAdi) {
+    try {
+      fs.rmdirSync(klasorAdi, { recursive: true });
+      console.log(`Klasör "${klasorAdi}" başarıyla silindi.`);
+    } catch (err) {
+      console.error(`Klasör silme hatası: ${err.message}`);
+    }
 }
 
 function copyFolder(source, target) {
     try {
-        fse.copySync(source, target, { overwrite: true|false })
+        fse.copySync(source, target, { overwrite: true | false })
         console.log('success!')
-        
+
     } catch (err) {
         console.error(err)
     }
-    
+
 }
-function refreshPage(isNewApp){
+function refreshPage(isNewApp) {
     let AppUrls = require("./MasterDesktop.json")
-    
+
     for (let index = 0; index < AppUrls.length; index++) {
-        let {myapp} = require(AppUrls[index].url);
-        
-        if(isNewApp){
-            if(apps !== myapp.title){
-                createApp(myapp.title,myapp.path)
+        let { myapp } = require(AppUrls[index].url);
+
+        if (isNewApp) {
+            if (apps !== myapp.title) {
+                createApp(myapp.title, myapp.path)
             }
         }
 
-        $("#"+myapp.title).click(function (e) { 
-            
+        $("#" + myapp.title).click(function (e) {
+
             myapp.click()
-            
-            
+
+
         });
     }
 }
 
-function editIndexFile(target,appName){
-    let fileString = 'const {appComponent} = require("./../../ComponenManager/componentmanager") \n \n let myapp = new appComponent("'+appName+'","paint.png") \n \n myapp.click = function () { \n myapp.viewScreen(); \n } \n \n module.exports = {myapp}'
-    fs.writeFileSync(target,fileString,(err)=>{
-        if (err) throw(err);
+function editIndexFile(target, appName) {
+    let fileString = 'const {appComponent} = require("./../../ComponenManager/componentmanager") \n \n let myapp = new appComponent("' + appName + '","paint.png") \n \n myapp.click = function () { \n myapp.viewScreen(); \n } \n \n module.exports = {myapp}'
+    fs.writeFileSync(target, fileString, (err) => {
+        if (err) throw (err);
         console.log('Dosyaya başarıyla yazıldı. editIndexFile');
-        
+
 
     });
-    
+
 }
 
-function createFolder(folderName){
+function createFolder(folderName) {
     fs.mkdir(folderName, (err) => {
         if (err) {
-          console.error('Klasör oluşturulurken bir hata oluştu:', err);
+            console.error('Klasör oluşturulurken bir hata oluştu:', err);
         } else {
-          console.log('Klasör başarıyla oluşturuldu.');
+            console.log('Klasör başarıyla oluşturuldu.');
         }
     });
-    
+
 }
 
-function readFileDir(path){
-    return new Promise((resolve,reject)=>{
+function readFileDir(path) {
+    return new Promise((resolve, reject) => {
         fs.readdir(path, (err, dosyaAdlari) => {
             if (err) {
-              reject(err)
+                reject(err)
             } else {
 
-              resolve(dosyaAdlari)
+                resolve(dosyaAdlari)
             }
         });
     })
 
-    
+
 }
 
 function readToFile(path) {
     return new Promise((resolve, reject) => {
-      fs.readFile(path, 'utf8', (err, veri) => {
-        if (err) {
-          console.error('Dosya okunamadı:', err);
-          reject(err);
-        } else {
-          //console.log(veri);
-          resolve(veri);
-        }
-      });
+        fs.readFile(path, 'utf8', (err, veri) => {
+            if (err) {
+                console.error('Dosya okunamadı:', err);
+                reject(err);
+            } else {
+                //console.log(veri);
+                resolve(veri);
+            }
+        });
     });
-  }
+}
 
 
 //Reading Post Massage
-window.addEventListener("message",async function(event) {
+window.addEventListener("message", async function (event) {
     let allUrls = []
     var receivedValue = event.data;
-    if(receivedValue instanceof Object && receivedValue.type == "newApp"){
+    if (receivedValue instanceof Object && receivedValue.type == "newApp") {
         fs.readFile("./MasterDesktop.json", 'utf8', (err, data) => {
             allUrls = JSON.parse(data)
-            allUrls.push(JSON.parse('{"name":"'+receivedValue.appName+'","url":"./src/apps/'+receivedValue.appName+'/index.js"}'))
+            allUrls.push(JSON.parse('{"name":"' + receivedValue.appName + '","url":"./src/apps/' + receivedValue.appName + '/index.js"}'))
             console.log(allUrls);
-            fs.writeFile("./MasterDesktop.json",JSON.stringify(allUrls),(err)=>{
-                if (err) throw(err);
+            fs.writeFile("./MasterDesktop.json", JSON.stringify(allUrls), (err) => {
+                if (err) throw (err);
                 console.log('Dosyaya başarıyla yazıldı.');
                 //Klasör koyalama işlemi
-                createFolder("./src/apps/"+receivedValue.appName)
-                copyFolder("./exampleApp/","./src/apps/"+receivedValue.appName)
-                editIndexFile("./src/apps/"+receivedValue.appName+"/index.js",receivedValue.appName)
-                
-                
+                createFolder("./src/apps/" + receivedValue.appName)
+                copyFolder("./exampleApp/", "./src/apps/" + receivedValue.appName)
+                editIndexFile("./src/apps/" + receivedValue.appName + "/index.js", receivedValue.appName)
 
-            });
+
+
+            })
+            
         });
         
-       
-    }else if(receivedValue instanceof Object && receivedValue.type == "openFile"){
+
+        
+
+    }
+    else if (receivedValue instanceof Object && receivedValue.type == "deleteApp") {
+
+        let allUrls = []
+        var receivedValue = event.data;
+        fs.readFile("./MasterDesktop.json", 'utf8', (err, data) => {
+            allUrls = JSON.parse(data)
+
+            jsonDizi = allUrls.filter(item => item["name"] !== receivedValue["appName"]);
+            fs.writeFile("./MasterDesktop.json", JSON.stringify(jsonDizi), (err) => {
+                if (err) throw (err);
+                deleteDir("./src/apps/"+receivedValue["appName"])
+
+            });
+
+
+        });
+    }
+    else if (receivedValue instanceof Object && receivedValue.type == "openFile") {
         let indexFile = ""
         let htmlFile = ""
         let appFile = ""
         let styleFile = ""
-        
-        
+
+
         //readFileDir("./src/apps/"+receivedValue.appName).then((data)=>console.log(data))
-        
-        await readToFile("./src/apps/"+receivedValue.appName+"/index.js").then((data) => indexFile = data)
-        await readToFile("./src/apps/"+receivedValue.appName+"/page/index.html").then((data) => htmlFile = data)
-        await readToFile("./src/apps/"+receivedValue.appName+"/page/app.js").then((data) => appFile = data)
-        await readToFile("./src/apps/"+receivedValue.appName+"/page/style.css").then((data) => styleFile = data)
 
-        
+        await readToFile("./src/apps/" + receivedValue.appName + "/index.js").then((data) => indexFile = data)
+        await readToFile("./src/apps/" + receivedValue.appName + "/page/index.html").then((data) => htmlFile = data)
+        await readToFile("./src/apps/" + receivedValue.appName + "/page/app.js").then((data) => appFile = data)
+        await readToFile("./src/apps/" + receivedValue.appName + "/page/style.css").then((data) => styleFile = data)
+
+
         let iframe = document.getElementById("iframeMasterCode")
-        iframe.contentWindow.postMessage({"type":"closeNewFilePage","indexjs":indexFile,"indexhtml":htmlFile,"appjs":appFile,"stylecss":styleFile});
+        iframe.contentWindow.postMessage({ "type": "closeNewFilePage", "indexjs": indexFile, "indexhtml": htmlFile, "appjs": appFile, "stylecss": styleFile });
 
 
-    }else if(receivedValue instanceof Object && receivedValue.type == "upload"){
+    } 
+    else if (receivedValue instanceof Object && receivedValue.type == "refresh"){
+        let value = receivedValue;
+        
+        
+        createApps()
+    }
+    else if (receivedValue instanceof Object && receivedValue.type == "upload") {
         let value = receivedValue;
 
         refreshPage(false)
 
-        if(value.fileName == "indexjs"){
-            fs.writeFile("./src/apps/"+value.appName+"indexjs", value.fileString, (err) => {
+        if (value.fileName == "indexjs") {
+            fs.writeFile("./src/apps/" + value.appName + "indexjs", value.fileString, (err) => {
                 if (err) {
-                  console.error('Dosyaya yazma hatası:', err);
+                    console.error('Dosyaya yazma hatası:', err);
                 } else {
-                  console.log('Dosyaya başarıyla yazıldı.');
+                    console.log('Dosyaya başarıyla yazıldı.');
                 }
             });
-        }else if(value.fileName == "indexhtml"){
-            fs.writeFile("./src/apps/"+value.appName+"/page/index.html", value.fileString, (err) => {
+        } else if (value.fileName == "indexhtml") {
+            fs.writeFile("./src/apps/" + value.appName + "/page/index.html", value.fileString, (err) => {
                 if (err) {
-                  console.error('Dosyaya yazma hatası:', err);
+                    console.error('Dosyaya yazma hatası:', err);
                 } else {
-                  console.log('Dosyaya başarıyla yazıldı.');
+                    console.log('Dosyaya başarıyla yazıldı.');
                 }
             });
         }
-        else if(value.fileName == "appjs"){
-            fs.writeFile("./src/apps/"+value.appName+"/page/app.js", value.fileString, (err) => {
+        else if (value.fileName == "appjs") {
+            fs.writeFile("./src/apps/" + value.appName + "/page/app.js", value.fileString, (err) => {
                 if (err) {
-                  console.error('Dosyaya yazma hatası:', err);
+                    console.error('Dosyaya yazma hatası:', err);
                 } else {
-                  console.log('Dosyaya başarıyla yazıldı.');
+                    console.log('Dosyaya başarıyla yazıldı.');
                 }
             });
-        }else if(value.fileName == "stylecss"){
-            fs.writeFile("./src/apps/"+value.appName+"/page/style.css", value.fileString, (err) => {
+        } else if (value.fileName == "stylecss") {
+            fs.writeFile("./src/apps/" + value.appName + "/page/style.css", value.fileString, (err) => {
                 if (err) {
-                  console.error('Dosyaya yazma hatası:', err);
+                    console.error('Dosyaya yazma hatası:', err);
                 } else {
-                  console.log('Dosyaya başarıyla yazıldı.');
+                    console.log('Dosyaya başarıyla yazıldı.');
                 }
             });
         }
     }
 
-    else if(receivedValue instanceof Object && receivedValue.type == "deleteApp"){
-        
-    });
 
 
-    
+
+
 });
 
 
 $(document).ready(function () {
 
-    function createNewApp(data){
-        
+    function createNewApp(data) {
+
     }
 
-    window.addEventListener("message", function(event) {
+    window.addEventListener("message", function (event) {
         //if (event.origin !== "http://www.example.com") return; // İframe'ın kaynak URLsini kontrol etmek için kullanabilirsiniz
-  
+
         var value = event.data;
 
-        if(value == "createApp"){
+        if (value == "createApp") {
             createNewApp(event.data)
         }
-        
-        
+
+
     });
-    
-    $(".view").mousedown(function (event) { 
-        if (event.which == 3){
+
+    $(".view").mousedown(function (event) {
+        if (event.which == 3) {
             $(".miniPanel").remove();
             let content = "<div class='miniPanel' > <button id='miniPanelBtn1'>Text1</button> <button>Text2</button><button>Text2</button> </div>"
-       
+
             $(".view").append(content);
-    
-           
-    
+
+
+
             $(".miniPanel").css("top", event.pageY);
             $(".miniPanel").css("left", event.pageX);
-        }   
-        if(event.which == 1){
+        }
+        if (event.which == 1) {
             //$(".miniPanel").remove();
         }
     });
 
-    $("#miniPanelBtn1").click(function (e) { 
-       console.log("hi");
-        
+    $("#miniPanelBtn1").click(function (e) {
+        console.log("hi");
+
     });
     let btn = document.getElementById("miniPanelBtn1")
-    
-    
 
 
-    for (let index = 0; index < AppUrls.length; index++) {
-        
-        let {myapp} = require(AppUrls[index].url);
-        apps.push(myapp.title)
-        
-        createApp(myapp.title,myapp.path)
-        
-        $("#"+myapp.title).click(function (e) { 
-            
-            myapp.click()
-            
-            
-        });
-        
-    }
-    
-    
+
+
+    createApps()
+
 });
 
 

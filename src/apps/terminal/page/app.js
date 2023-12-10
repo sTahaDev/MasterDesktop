@@ -37,7 +37,8 @@ const commands = {
     'clear': 'clears the terminal history.',
     'close': 'Closes Windows And Apps',
     "create-new-app": "Create New Apps For Master Desktop",
-    "delete-app": "Delete App"
+    "delete-app": "Delete App",
+    "refresh": "Refresh Master Desktop"
 }
 
 
@@ -86,7 +87,7 @@ function cmd_controller(input_value) {
                 if (isCanCreate) {
                     window.parent.postMessage({ "type": "newApp", "appName": args[0] })
                     history.append("Successfully Created New App: " + args[0] + ".  ")
-                    history.append("Please ReStart MasterDesktop")
+                    history.append("Please Refresh (Command: refresh)")
                 } else {
                     history.append("Error: File Already Using")
                 }
@@ -95,7 +96,10 @@ function cmd_controller(input_value) {
             else if (cmd == "delete-app") {
                 window.parent.postMessage({ "type": "deleteApp", "appName": args[0] })
                 history.append("Successfully Deleted: " + args[0] + ".  ")
-                history.append("Please ReStart MasterDesktop")
+                history.append("Please Refresh (Command: refresh)")
+            }else if (cmd == "refresh") {
+                window.parent.postMessage({ "type": "refresh", "appName": "none" })
+                history.append("Successfully Refreshed!")
             }
 
 
